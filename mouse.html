@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eye Follow Cursor</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            position: relative;
+            display: inline-block;
+        }
+        .nobita-image {
+            width: 600px; 
+            height: 700px;
+            position: relative;
+        }
+        .eye-container {
+            position: absolute;
+            margin-left: 10px;
+            margin-top: 110px;
+            top: 0;
+            left: 0;
+            display: flex;
+            gap: 60px;
+        }
+        .eye {
+            width: 120px; 
+            height: 175px;
+            background: rgb(247, 223, 223);
+            border: 4px solid rgba(241, 183, 183, 0.9);
+            border-radius: 50%;
+            position: absolute;
+            overflow: hidden;
+            display: flex;
+            gap: 30px;
+        }
+        .pupil {
+            width: 40px;
+            height: 60px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease; /* Smooth transition for default position */
+        }
+        #leftEye {
+            top: 176px; 
+            left: 115px;
+        }
+        #rightEye {
+            top: 178px; 
+            left: 342px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img class="nobita-image" src="https://cdn130.picsart.com/309420884207211.png" alt="Nobita Image" />
+        <div class="eye-container">
+            <div class="eye" id="leftEye">
+                <div class="pupil" id="leftPupil"></div>
+            </div>
+            <div class="eye" id="rightEye">
+                <div class="pupil" id="rightPupil"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const leftPupil = document.getElementById('leftPupil');
+        const rightPupil = document.getElementById('rightPupil');
+        const leftEye = document.getElementById('leftEye');
+        const rightEye = document.getElementById('rightEye');
+
+        let idleTimeout; // Timeout to detect idle state
+        let isIdle = false; // Flag to track if eyes are idle
+        let isSmooth = false; // Flag to track smooth movement
+
+        // Mousemove event to move pupils
+        document.addEventListener('mousemove', (event) => {
+            clearTimeout(idleTimeout); // Reset idle timeout on mouse move
+
+            if (isIdle) {
+                // If eyes are idle, reset the flag and enable smooth movement
+                isIdle = false;
+                isSmooth = true; // Start with smooth movement
+                leftPupil.style.transition = 'transform 0.1s ease';
+                rightPupil.style.transition = 'transform 0.1s ease';
+            }
+
+            // Get the position of each eye
+            const leftEyeRect = leftEye.getBoundingClientRect();
+            const rightEyeRect = rightEye.getBoundingClientRect();
+
+            // Calculate the center of each eye
+            const leftEyeCenterX = leftEyeRect.left + leftEyeRect.width / 2;
+            const leftEyeCenterY = leftEyeRect.top + leftEyeRect.height / 2;
+            const rightEyeCenterX = rightEyeRect.left + rightEyeRect.width / 2;
+            const rightEyeCenterY = rightEyeRect.top + rightEyeRect.height / 2;
+
+            // Get mouse position
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            // Calculate the angle and distance for the left eye
+            const deltaXLeft = mouseX - leftEyeCenterX;
+            const deltaYLeft = mouseY - leftEyeCenterY;
+            const angleLeft = Math.atan2(deltaYLeft, deltaXLeft);
+            const radiusLeft = Math.min(leftEyeRect.width / 4, leftEyeRect.height / 4); // Limit pupil movement
+            const pupilXLeft = radiusLeft * Math.cos(angleLeft);
+            const pupilYLeft = radiusLeft * Math.sin(angleLeft);
+
+            // Calculate the angle and distance for the right eye
+            const deltaXRight = mouseX - rightEyeCenterX;
+            const deltaYRight = mouseY - rightEyeCenterY;
+            const angleRight = Math.atan2(deltaYRight, deltaXRight);
+            const radiusRight = Math.min(rightEyeRect.width / 4, rightEyeRect.height / 4); // Limit pupil movement
+            const pupilXRight = radiusRight * Math.cos(angleRight);
+            const pupilYRight = radiusRight * Math.sin(angleRight);
+
+            // Move the pupils
+            leftPupil.style.transform = `translate(${pupilXLeft}px, ${pupilYLeft}px)`;
+            rightPupil.style.transform = `translate(${pupilXRight}px, ${pupilYRight}px)`;
+
+            // Gradually disable smooth movement for faster response
+            if (isSmooth) {
+                setTimeout(() => {
+                    leftPupil.style.transition = 'none';
+                    rightPupil.style.transition = 'none';
+                    isSmooth = false; // Disable smooth movement
+                }, 300); // After 300ms
+            }
+
+            // Set timeout to reset pupils to default position after inactivity
+            idleTimeout = setTimeout(() => {
+                resetPupils();
+            }, 1500); // 500ms of inactivity
+        });
+
+        // Mouseleave event to reset pupils immediately
+        document.addEventListener('mouseleave', () => {
+            resetPupils();
+        });
+
+        // Function to reset pupils to default position
+        function resetPupils() {
+            isIdle = true; // Set idle flag to true
+            leftPupil.style.transition = 'transform 0.6s ease'; // Enable smooth transition
+            rightPupil.style.transition = 'transform 0.6s ease'; // Enable smooth transition
+
+            leftPupil.style.transform = 'translate(-50%, -50%)'; // Default position
+            rightPupil.style.transform = 'translate(-50%, -50%)'; // Default position
+        }
+    </script>
+</body>
+</html>
